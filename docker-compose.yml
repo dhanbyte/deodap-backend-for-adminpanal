@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  # बैकएंड सर्विस
+  backend:
+    build:
+      context: ./deodap-backend-for-adminpanal
+      dockerfile: Dockerfile
+    container_name: buddy-bazaar-backend
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    env_file:
+      - ./deodap-backend-for-adminpanal/.env.production
+    volumes:
+      - ./deodap-backend-for-adminpanal:/app
+      - /app/node_modules
+    networks:
+      - buddy-bazaar-network
+    depends_on:
+      - mongodb
+
+  # फ्रंटएंड सर्विस
+  frontend:
+    build:
+      context: ./Bazaar-buddy-main
+      dockerfile: Dockerfile
+    container_name: buddy-bazaar-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    env_file:
+      - ./Bazaar-buddy-main/.env.production
+    volumes:
+      - ./Bazaar-buddy-main:/app
+      - /app/node_modules
+    networks:
+      - buddy-bazaar-network
+    depends_on:
+      - backend
+
+  # मोंगोडीबी सर्विस (डेवलपमेंट के लिए, प्रोडक्शन में मैनेज्ड डेटाबेस का उपयोग करें)
+  mongodb:
+    image: mongo:latest
+    container_name: buddy-bazaar-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb-data:/data/db
+    networks:
+      - buddy-bazaar-network
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=rootpassword
+
+networks:
+  buddy-bazaar-network:
+    driver: bridge
+
+volumes:
+  mongodb-data:
